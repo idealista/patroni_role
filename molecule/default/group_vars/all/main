@@ -1,0 +1,110 @@
+---
+# "postgres_cluster" variables
+is_cluster_installed: false 
+is_add_node_cluster: false
+postgresql_install: True
+pgbouncer_install: True
+
+pg_major_release: "{{ (lookup('env', 'PG_MAJOR_RELEASE', default='') |  length > 0) | ternary(lookup('env', 'PG_MAJOR_RELEASE'), '16') }}"
+
+patroni:
+  cluster_name: "pgdbk-cluster"  # the cluster name (must be unique for each cluster)
+  install_version: "3.3.0"  # or 'latest'
+
+  superuser_username: "postgres"
+  superuser_password: supersecure
+
+  replication_username: "replicator"
+  replication_password: supersecure 
+
+  pending_restart: true
+
+postgresql:
+  locale: 'es_ES.UTF-8'
+  cluster_name: "main"
+  version: "{{ pg_major_release }}"
+  port: 5432
+  
+  max_connections: "200"
+  max_prepared_transactions: "0"
+
+  work_mem: "128MB"
+  maintenance_work_mem: "256MB"
+
+  min_wal_size: "2GB"
+  max_wal_size: "8GB"               # or 16GB/32GB
+
+  random_page_cost: "1.1"           # "1.1" for SSD storage
+  effective_io_concurrency: "200"   # "200" for SSD storage
+
+  log_line_prefix: "'%m [%p] %q%u@%d %h:%c %t ' " 
+  log_filename: "postgresql-%d.log"
+
+  max_worker_processes: "24" 
+  max_parallel_workers: "16"
+  max_parallel_workers_per_gather: "4"    
+  max_parallel_maintenance_workers: "4" 
+
+  password_encryption_algorithm: "{{ ( pg_major_release | int > 13) | ternary('scram-sha-256' , 'md5') }}"
+ 
+  extensions_install: []
+  #  - 'h3-pg' 
+  #  - 'mysql_fdw' 
+  #  - 'oracle_fdw' 
+  #  - 'pgrouting'  
+  #  - 'pgsql_postal'  
+  #  - 'postgis'
+  #  - 'rum'  
+  #  - 'system_stats'
+
+  h3_install_version: "{{ (ansible_distribution == 'Debian' and ansible_distribution_major_version | int < 12) | ternary('3.7.2','latest') }}"
+
+pgbouncer:
+  install: true  # or 'false' if you do not want to install and configure the pgbouncer service
+  conf_dir: "/etc/pgbouncer"
+  log_dir: "/var/log/pgbouncer"
+  listen_addr: "0.0.0.0"
+  listen_port: 6432
+  max_client_conn: 10000
+  max_db_connections: 1000
+  default_pool_size: 40
+  query_wait_timeout: 120
+  default_pool_mode: "session"
+  admin_users: "{{ patroni.superuser_username }}"  # comma-separated list of users, who are allowed to change settings
+  stats_users: "{{ patroni.superuser_username }}"  # comma-separated list of users who are just allowed to use SHOW command
+  ignore_startup_parameters: "extra_float_digits,geqo,search_path"
+  auth_type: "{{ postgresql.password_encryption_algorithm }}"
+  auth_user: true # or 'false' if you want to manage the list of users for authentication in the database via userlist.txt
+  auth_username: pgbouncer # user who can query the database via the user_search function
+  auth_password: supersecure
+  auth_dbname: "postgres"
+
+  pools:
+    - { name: "postgres", dbname: "postgres", pool_parameters: "" }
+
+
+#postgres_role
+pg_superuser_username: "{{ patroni.superuser_username }}"
+pg_superuser_password: "{{ patroni.superuser_password }}"
+pg_cluster_name: '{{ postgresql.version }}/{{ postgresql.cluster_name }}'
+pg_user: "{{ patroni.superuser_username }}"
+pg_group: postgres
+pg_port: "{{ postgresql.port }}"
+pg_service_state: started
+pg_service_enabled: true
+pg_automatic_startup_configuration: auto
+pg_os_tuning: false
+pg_users_no_log: false
+pg_users:
+  - name: "{{ pgbouncer.auth_username }}"
+    password: "{{ pgbouncer.auth_password }}"
+pg_databases:
+  - name: example_db
+pg_custom_options:
+  custom.option: "sample_option"
+
+pg_bin_dir: "{{ (ansible_distribution == 'Debian') | ternary('/usr/lib/postgresql/' ~  pg_major_release  ~  '/bin', '/usr/pgsql-' ~  pg_major_release ~  '/bin') }}"
+pg_data_directory: "{{ (ansible_distribution == 'Debian') | ternary('/var/lib/postgresql/' ~  pg_major_release ~ '/' ~ postgresql.cluster_name, '/var/lib//pgsql/' ~  pg_major_release ~ '/data') }}"
+pg_password_encryption: "{{ postgresql.password_encryption_algorithm }}"
+
+pgbouncer_listen_port: "{{ pgbouncer.listen_port }}"

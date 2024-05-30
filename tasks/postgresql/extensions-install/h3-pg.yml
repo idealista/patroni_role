@@ -1,0 +1,50 @@
+---
+
+- block:
+    - name: H3-PG - Verificar si la extensión H3 ya está instalada
+      shell: |
+        pg_config --pkglibdir
+      register: pkglibdir_result
+      changed_when: false
+
+    - name: H3-PG - Verificar la presencia de la extensión H3
+      stat:
+        path: "{{ pkglibdir_result.stdout_lines[0] }}/h3.so"
+      register: extension_check
+
+    - name: H3-PG - h3 está presente
+      debug:
+        msg: "h3 esta instalado"
+      when: extension_check.stat.exists
+
+    - name: H3-PG - Instalar extensión H3 si no está instalada
+      block:
+        - name: H3-PG - Instalar dependencias
+          apt:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - build-essential
+            - postgresql-server-dev-{{ postgresql_version }}
+            - cmake
+            - make
+            - gcc
+            - libtool
+            - pgxnclient
+            - git
+
+        - name: H3-PG - Compilar e instalar la extensión H3
+          shell: |
+            pgxn install h3
+          when: postgresql_h3_install_version is not defined or postgresql_h3_install_version == "latest"
+
+        - name: H3-PG - Compilar e instalar la extensión H3
+          shell: |
+            pgxn install 'h3={{ postgresql_h3_install_version }}'
+          when: postgresql_h3_install_version is defined and  postgresql_h3_install_version != "latest"
+
+      when: extension_check.stat.exists == false
+
+  tags: postgresql_extensions_install, h3-pg
+
+...

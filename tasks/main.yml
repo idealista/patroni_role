@@ -1,0 +1,23 @@
+---
+
+# Install Patroni. if Patroni is unavailable
+
+- name: pre-checks patroni
+  import_tasks: "pre-checks/patroni.yml"
+  tags: patroni, patroni_install, patroni_config
+
+- import_tasks: pg_install_cluster.yml
+  when:
+    - not (is_cluster_installed | default(false) | bool)
+    - not (patroni_is_running | default(false) | bool)
+  tags: patroni, patroni_install
+
+- import_tasks: pg_add_node_cluster.yml
+  when: is_add_node_cluster | default(false) | bool
+  tags: patroni, patroni_config
+
+- import_tasks: pg_config_cluster.yml
+  when: >
+    is_cluster_installed | default(false) | bool or
+    patroni_is_running | default(false) | bool
+  tags: patroni, patroni_config

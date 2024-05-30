@@ -1,0 +1,22 @@
+---
+- name: Restart for the Patroni cluster "{{ inventory_hostname }}"
+  become: true
+  become_user: postgres
+  ansible.builtin.expect:
+    command: "patronictl -c /etc/patroni/patroni.yml restart {{ patroni_cluster_name }} {{ hostvars[inventory_hostname]['ansible_hostname'] }}"
+    responses:
+      (.*)When should the restart take place(.*): "now"
+      (.*)Are you sure you want to restart members (.*): "y"
+      (.*)Restart if the PostgreSQL version is less than provided(.*): ""
+  register: patronictl_restart_result
+  async: 120
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+- name: Result for the Patroni cluster "{{ inventory_hostname }}"
+  ansible.builtin.debug:
+    var: patronictl_restart_result['stdout']
+
+...

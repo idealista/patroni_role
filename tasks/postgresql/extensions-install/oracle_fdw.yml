@@ -1,0 +1,130 @@
+---
+
+- block:
+    - name: oracle_fdw - get pkglibdir
+      shell: |
+        pg_config --pkglibdir
+      register: pkglibdir_result
+      changed_when: false
+
+    - name: oracle_fdw - Verificar la presencia de la extensión oracle_fdw
+      stat:
+        path: "{{ pkglibdir_result.stdout_lines[0] }}/oracle_fdw.so"
+      register: extension_check
+
+    - name: oracle_fdw - oracle_fdw está presente
+      debug:
+        msg: "oracle_fdw esta instalado"
+      when: extension_check.stat.exists
+
+    - name: oracle_fdw - Instalar extensión oracle_fdw si no está instalada
+      block:
+        - name: oracle_fdw - Verificar si oracle instantclient sdk está instalada
+          shell: "find / -name oci.h"
+          register: find_oci_h
+        - name: oracle_fdw - Verificar si oracle instantclient sqlplus está instalada
+          shell: "find / -name libsqlplus.so"
+          register: find_sqlplus
+        - name: oracle_fdw - Oracle instantclient presente
+          debug:
+            msg: "oracle_fdw - oracle instantclient esta instalado"
+          when: (find_oci_h.stdout_lines | length | bool)  and
+                (find_sqlplus.stdout_lines | length | bool)
+        - name: oracle_fdw - Instalar oracle instantclient
+          block:
+            - name: Create /data/oracle dir
+              file:
+                path: "/data/oracle"
+                state: directory
+                recurse: true
+            - name: Download client software
+              get_url:
+                url: "https://download.oracle.com/otn_software/linux/instantclient/2111000/{{ item }}"
+                dest: "/data/oracle/{{ item }}"
+              loop:
+                - "instantclient-basic-linux.x64-21.11.0.0.0dbru.zip"
+                - "instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip"
+                - "instantclient-sqlplus-linux.x64-21.11.0.0.0dbru.zip"
+            - name: Copy client software
+              unarchive:
+                src: "/data/oracle/{{ item }}"
+                dest: "/data/oracle/"
+                remote_src: true
+              loop:
+                - "instantclient-basic-linux.x64-21.11.0.0.0dbru.zip"
+                - "instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip"
+                - "instantclient-sqlplus-linux.x64-21.11.0.0.0dbru.zip"
+            - name: Create symbolic link
+              file:
+                src: "/data/oracle"
+                dest: "/opt/oracle"
+                state: link
+            - name: Create /etc/ld.so.conf.d si no existe
+              file:
+                path: "/etc/ld.so.conf.d"
+                state: directory
+                recurse: true
+              loop:
+            - name: Añadir config /etc/ld.so.conf.d/oracle-instantclient.conf
+              lineinfile:
+                path: "/etc/ld.so.conf.d/oracle-instantclient.conf"
+                line: '/opt/oracle/instantclient_21_11'
+                state: present
+                create: true
+            - name: recargar ldconfig
+              shell: ldconfig
+            - name: Create /etc/profile.d si no existe
+              file:
+                path: "/etc/profile.d"
+                state: directory
+                recurse: true
+              loop:
+            - name: Añadir variables de entorno en /etc/profile.d/oracle-instantclient.sh
+              lineinfile:
+                path: "/etc/profile.d/oracle-instantclient.sh"
+                line: '{{ item }}'
+                state: present
+                create: true
+              loop:
+                - "export ORACLE_HOME=/opt/oracle/instantclient_21_11"
+                - "export PATH=$PATH:/opt/oracle/instantclient_21_11"
+                - "export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_11:$LD_LIBRARY_PATH"
+            - name: recargar /etc/profile.d
+              shell: source /etc/profile.d/oracle-instantclient.sh
+              args:
+                executable: /bin/bash
+          when: (find_oci_h.stdout_lines | length | bool) == false or
+                (find_sqlplus.stdout_lines | length | bool) == false
+
+        - name: oracle_fdw - Instalar dependencias
+          apt:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - build-essential
+            - postgresql-server-dev-{{ postgresql_version }}
+            - cmake
+            - make
+            - gcc
+            - libtool
+            - libaio1
+            - libaio-dev
+            - pgxnclient
+
+        - name: oracle_fdw - Compilar e instalar la extensión oracle_fdw
+          shell: |
+             USE_PGXS=1 pgxn install oracle_fdw
+          when: ( lookup('env', 'ORACLE_HOME') != '' )
+
+        - name: oracle_fdw - Compilar e instalar la extensión oracle_fdw
+          shell: |
+             USE_PGXS=1 pgxn install oracle_fdw
+          environment:
+            ORACLE_HOME: '/opt/oracle/instantclient_21_11'
+          when: ( lookup('env', 'ORACLE_HOME') == '' )
+
+      when: extension_check.stat.exists == false
+
+  tags: postgresql_extensions_install, oracle_fdw
+
+...

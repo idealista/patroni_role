@@ -1,0 +1,12 @@
+---
+
+- name: mysql-fdw - Install pgrouting postgres extensions
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - postgresql-{{ postgresql_version }}-mysql-fdw
+  tags: postgresql_extensions_install, mysql-fdw
+
+...

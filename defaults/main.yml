@@ -1,0 +1,148 @@
+---
+# ---------------------------------------------------------------------
+# Proxy variables (optional) for download packages using a proxy server
+proxy_env: {}  # yamllint disable rule:braces
+#  http_proxy: http://10.128.64.9:3128
+#  https_proxy: http://10.128.64.9:3128
+# ---------------------------------------------------------------------
+
+
+# "postgres_cluster" variables
+is_master: true
+
+patroni:
+#  is_cluster_installed: false
+#  is_add_node_cluster: false
+#  cluster_name: "postgres-cluster"  # the cluster name (must be unique for each cluster)
+#  install_version: "3.1.0"  # or 'latest'
+#  superuser_username: "postgres"
+#  superuser_password: "postgres-pass"
+#  replication_username: "replicator"
+#  replication_password: "replicator-pass"
+#  pending_restart: false
+#  consul_host: '127.0.0.1:8500'
+#  consul_register_service: false
+#  consul_checks: []
+
+postgresql:
+#  install: true  # or 'false' if postgres is already installed
+#  cluster_name: "main"
+#  version: "16"
+#  port: 5432
+#  encoding: "UTF8"
+#  locale: 'en_US.UTF-8'
+#  data_checksums: true
+#  password_encryption_algorithm: 'scram-sha-256'
+#  postgresql.extensions: []
+#  postgresql.extensions_install: []  #  'h3-pg', 'mysql_fdw', 'oracle_fdw', 'pgrouting', 'pgsql_postal', 'postgis', 'rum'
+#  h3_install_version: 'latest'
+#  max_connections: '500'
+#  superuser_reserved_connections: '5'
+#  max_locks_per_transaction: '512'
+#  max_prepared_transactions: '0'
+#  huge_pages: 'try'  # or "on" if you set "vm_nr_hugepages" in kernel parameters
+#  shared_buffers: (ansible_memtotal_mb * 0.25) | int | string + 'MB'  # by default, 25% of RAM
+#  effective_cache_size: (ansible_memtotal_mb * 0.75) | int | string + 'MB'  # by default, 75% of RAM
+#  work_mem: '128MB'  # please change this value
+#  maintenance_work_mem: '256MB'  # please change this value
+#  checkpoint_timeout: '15min'
+#  checkpoint_completion_target: '0.9'
+#  min_wal_size: '2GB'
+#  max_wal_size: '8GB'  # or 16GB/32GB
+#  wal_buffers: '32MB'
+#  default_statistics_target: '1000'
+#  seq_page_cost: '1'
+#  random_page_cost: '4'  # "1.1" for SSD storage. Also, if your databases fits in shared_buffers
+#  effective_io_concurrency: '2'  # "200" for SSD storage
+#  synchronous_commit: 'on'  # or 'off' if you can you lose single transactions in case of a crash
+#  autovacuum: 'on'  # never turn off the autovacuum!
+#  autovacuum_max_workers: '5'
+#  autovacuum_vacuum_scale_factor: '0.01'  # or 0.005/0.001
+#  autovacuum_analyze_scale_factor: '0.01'
+#  autovacuum_vacuum_cost_limit: '500'  # or 1000/5000
+#  autovacuum_vacuum_cost_delay: '2'
+#  autovacuum_naptime: '1s'
+#  max_files_per_process: '4096'
+#  archive_mode: 'on'
+#  archive_timeout: '1800s'
+#  archive_mode: 'cd .'  # 'cd .' - not doing anything yet with WAL-s, "wal-g wal-push %p" - archive WAL-s using WAL-G, pgbackrest_archive_command - archive WAL-s using pgbackrest
+#  wal_level: 'replica'
+#  wal_keep_size: '2GB'
+#  max_wal_senders: '10'
+#  max_replication_slots: '10'
+#  hot_standby: 'on'
+#  wal_log_hints: 'on'
+#  wal_compression: 'on'
+#  shared_preload_libraries: 'pg_stat_statements,auto_explain'
+#  pg_stat_statements.max: '10000'
+#  pg_stat_statements.track: 'all'
+#  pg_stat_statements.track_utility: 'false'
+#  pg_stat_statements.save: 'true'
+#  auto_explain.log_min_duration: '10s'  # enable auto_explain for 10-second logging threshold. Decrease this value if necessary
+#  auto_explain.log_analyze: 'true'
+#  auto_explain.log_buffers: 'true'
+#  auto_explain.log_timing: 'false'
+#  auto_explain.log_triggers: 'true'
+#  auto_explain.log_verbose: 'true'
+#  auto_explain.log_nested_statements: 'true'
+#  auto_explain.sample_rate: '0.01'  # enable auto_explain for 1% of queries logging threshold
+#  track_io_timing: 'on'
+#  log_lock_waits: 'on'
+#  log_temp_files: '0'
+#  track_activities: 'on'
+#  track_activity_query_size: '4096'
+#  track_counts: 'on'
+#  track_functions: 'all'
+#  log_checkpoints: 'on'
+#  logging_collector: 'on'
+#  log_truncate_on_rotation: 'on'
+#  log_rotation_age: '1d'
+#  log_rotation_size: '0'
+#  log_line_prefix: \"'%t [%p-%l] %r %q%u@%d '\"
+#  log_destination: 'csvlog'
+#  log_filename: 'postgresql-%a.log'
+#  log_directory:  postgresql_log_dir
+#  log_statement:  'none'   # none, ddl, mod, all
+#  log_min_error_statement:  'error'
+#  log_min_duration_statement:  -1
+#  hot_standby_feedback: 'on'  # allows feedback from a hot standby to the primary that will avoid query conflicts
+#  max_standby_streaming_delay: '30s'
+#  wal_receiver_status_interval: '10s'
+#  idle_in_transaction_session_timeout: '10min'  # reduce this timeout if possible
+#  jit: 'off'
+#  max_worker_processes: '24'
+#  max_parallel_workers: '8'
+#  max_parallel_workers_per_gather: '2'
+#  max_parallel_maintenance_workers: '2'
+#  tcp_keepalives_count: '10'
+#  tcp_keepalives_idle: '300'
+#  tcp_keepalives_interval: '30'
+#  pg_hba: []
+#     - { type: "host", database: "mydatabase", user: "mydb-user", address: "address", method: "method" }
+
+pgbouncer:
+#  install: true:   # or 'false' if you do not want to install and configure the pgbouncer service
+#  conf_dir: '/etc/pgbouncer'
+#  log_dir: '/var/log/pgbouncer'
+#  listen_addr: '0.0.0.0'
+#  listen_port: 6432
+#  max_client_conn: 10000
+#  max_db_connections: 1000
+#  default_pool_size: 20
+#  query_wait_timeout: 120
+#  default_pool_mode: 'session'
+#  admin_users: patroni_superuser_username  # comma-separated list of users, who are allowed to change settings
+#  stats_users: patroni_superuser_username  # comma-separated list of users who are just allowed to use SHOW command
+#  ignore_startup_parameters: 'extra_float_digits,geqo,search_path'
+#  auth_type: postgresql_password_encryption_algorithm
+#  auth_user: true                            # or 'false' if you want to manage the list of users for authentication in the database via userlist.txt
+#  auth_hba_file: pgbouncer_conf_dir + '/pg_hba.conf'
+#  auth_username: 'pgbouncer'             # user who can query the database via the user_search function
+#  auth_password: 'pgbouncer-pass'        # please change password
+#  auth_dbname: 'postgres'
+#  log_connections: 0
+#  log_disconnections: 0
+#  pools: []
+#    - { name: "postgres", dbname: "postgres", pool_parameters: "" }
+
+...

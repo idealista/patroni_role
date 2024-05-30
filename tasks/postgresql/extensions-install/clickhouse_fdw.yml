@@ -1,0 +1,68 @@
+---
+
+- block:
+
+    - name: clickhouse_fdw - get pkglibdir
+      shell: |
+        pg_config --pkglibdir
+      register: pkglibdir_result
+      changed_when: false
+
+    - name: clickhouse_fdw - Verificar la presencia de la extensión clickhouse_fdw
+      stat:
+        path: "{{ pkglibdir_result.stdout_lines[0] }}/clickhouse_fdw.so"
+      register: extension_check
+
+    - name: clickhouse_fdw - clickhouse_fdw está presente
+      debug:
+        msg: "clickhouse_fdw esta instalado"
+      when: extension_check.stat.exists
+
+    - name: clickhouse_fdw - version de postgresql no soportada
+      debug:
+        msg:
+          - "WARNING: version postgresql {{ postgresql_version }} no soportada. "
+          - "         extensión clickhouse_fdw no instalada."
+      when: postgresql_version is version('11', '<') or  postgresql_version is version('14', '>')
+
+    - name: clickhouse_fdw - Instalar extensión clickhouse_fdw
+      block:
+        - name: clickhouse_fdw - Instalar dependencias
+          apt:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - build-essential
+            - postgresql-server-dev-{{ postgresql_version }}
+            - make
+            - curl
+            - automake
+            - libtool
+            - libcurl4-openssl-dev
+            - uuid-dev
+            - git
+
+        - name: clickhouse_fdw - crear path del repositorio
+          file:
+            path: "/data/pg_extensions"
+            state: directory
+            recurse: true
+
+        - name: clickhouse_fdw - Instalar repositorio
+          git:
+            repo: 'clickhouse_fdw'
+            dest: "/data/pg_extensions/clickhouse_fdw"
+
+        - name: clickhouse_fdw - Instalar extension
+          shell: |
+            cd /data/pg_extensions/clickhouse_fdw
+            mkdir build && cd build
+            cmake ..
+            make && make install
+
+      when: extension_check.stat.exists == false and
+            postgresql_version is version('11', '>=') and  postgresql_version is version('14', '<=')
+
+  tags: postgresql_extensions_install, clickhouse_fdw
+
+...

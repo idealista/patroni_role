@@ -1,0 +1,9 @@
+---
+
+- name: rum - Instalar extensión rum
+  apt:
+    name: postgresql-{{ postgresql_version }}-rum
+    state: present
+  tags: postgresql_extensions_install, rum
+
+...

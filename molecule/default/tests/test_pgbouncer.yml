@@ -1,0 +1,56 @@
+# Molecule managed
+
+---
+file:
+  {{ pgbouncer_conf_dir }}:
+    exists: true
+    filetype: directory
+    owner: {{ pg_user }}
+    group: {{ pg_group }}
+  {{ pgbouncer_log_dir }}:
+    exists: true
+    filetype: directory
+    owner: {{ pg_user }}
+    group: {{ pg_group }}
+
+service:
+  {{ pgbouncer_service }}:
+    enabled: true
+    running: true
+port:
+  tcp:{{ pgbouncer_listen_port }}:
+    listening: true
+
+command:
+  pgversion:
+    exit-status: 0
+    exec: "/usr/sbin/pgbouncer -V"
+    stdout:
+      - "PgBouncer"
+    stderr: []
+    timeout: 30000
+    skip: false
+  pgisready:
+    exit-status: 0
+    exec: "{{ postgresql_bin_dir }}/pg_isready -h localhost -p {{ pgbouncer_listen_port }}"
+    stdout:
+      - "accepting connections"
+    stderr: []
+    timeout: 30000
+    skip: false
+  users:
+    exit-status: 0
+    exec: runuser -l postgres -c 'PGPASSWORD={{ pg_superuser_password }} {{ postgresql_bin_dir }}/psql -p {{ pgbouncer_listen_port }} -c "\du"'
+    stdout:
+      - "{{ pg_users[0].name }}"
+    stderr: []
+    timeout: 30000
+    skip: false
+  databases:
+    exit-status: 0
+    exec: runuser -l postgres -c 'PGPASSWORD={{ pg_superuser_password }} {{ postgresql_bin_dir }}/psql -p {{ pgbouncer_listen_port }} -c "\l"'
+    stdout:
+      - "{{ pg_databases[0].name }}"
+    stderr: []
+    timeout: 30000
+    skip: false

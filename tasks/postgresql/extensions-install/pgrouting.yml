@@ -1,0 +1,82 @@
+---
+
+- name: pgrouting - Install pgrouting postgres extensions
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - postgresql-{{ postgresql_version }}-pgrouting
+    - osm2pgrouting
+  when: (ansible_distribution == 'Debian' and ansible_distribution_major_version | int > 10)
+  tags: postgresql_extensions_install, pgrouting
+
+- block:
+    - name: pgRouting - Verificar si la extensión pgRouting ya está instalada
+      shell: |
+        pg_config --pkglibdir
+      register: pkglibdir_result
+      changed_when: false
+
+    - name: pgRouting - Verify presence of libpgrouting
+      find:
+        paths: "{{ pkglibdir_result.stdout_lines[0] }}"
+        patterns: "libpgrouting*.so"
+      register: extension_check
+
+    - name: pgRouting - pgRouting está presente
+      debug:
+        msg: "pgRouting esta instalado"
+      when: extension_check.matched > 0
+
+    - name: pgRouting - Instalar extensión pgRouting si no está instalada
+      block:
+
+        - name: Install build dependencies for pgRouting
+          apt:
+            name:
+              - build-essential
+              - cmake
+              - git
+              - postgresql-server-dev-16
+              - libboost-system-dev
+              - libboost-thread-dev
+              - libboost-chrono-dev
+              - libboost-date-time-dev
+              - libboost-test-dev
+              - libxml2-dev
+              - libjson-c-dev
+            state: present
+
+        - name: Clone pgRouting repository
+          git:
+            repo: 'https://github.com/pgRouting/pgrouting.git'
+            dest: /tmp/pgrouting
+            version: 'v3.4.2'  # Puedes ajustar la versión según sea necesario
+
+        - name: Create build directory for pgRouting
+          file:
+            path: /tmp/pgrouting/build
+            state: directory
+
+        - name: Compile pgRouting
+          command: cmake ..
+          args:
+            chdir: /tmp/pgrouting/build
+
+        - name: Run make
+          command: make
+          args:
+            chdir: /tmp/pgrouting/build
+
+        - name: Install pgRouting
+          command: make install
+          args:
+            chdir: /tmp/pgrouting/build
+
+      when: extension_check.matched == 0
+
+  when: (ansible_distribution == 'Debian' and ansible_distribution_major_version | int < 11)
+  tags: postgresql_extensions_install, pgRouting
+
+...

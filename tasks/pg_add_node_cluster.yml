@@ -1,0 +1,113 @@
+---
+
+- name: Include main variables
+  ansible.builtin.include_vars: "vars/main.yml"
+  tags: always
+- name: Include system variables
+  ansible.builtin.include_vars: "vars/system.yml"
+  tags: always
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+  tags: always
+
+- block:   # add_pgnode.yml | PostgreSQL High-Availability Cluster Scaling (add a replica node to the cluster "{{ patroni_cluster_name }}")
+
+    - name: "[Pre-Check] Checking Linux distribution"
+      ansible.builtin.fail:
+        msg: "{{ ansible_distribution }} is not supported"
+      when: ansible_distribution not in os_valid_distributions
+
+    - name: "[Pre-Check] Checking version of OS Linux"
+      ansible.builtin.fail:
+        msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
+      when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
+
+    - name: "[Pre-Check] Check if there is a node with new_node set to true"
+      ansible.builtin.set_fact:
+        new_nodes: "{{ new_nodes | default([]) + [item] }}"
+      when: hostvars[item]['new_node'] | default(false) | bool
+      loop: "{{ groups['replica'] }}"
+      tags: always
+
+    # Stop, if no nodes found with new_node variable
+    - name: "Pre-Check error. No nodes found with new_node set to true"
+      run_once: true   # noqa run-once
+      ansible.builtin.fail:
+        msg: "Please specify the new_node=true variable for the new server to add it to the existing cluster."
+      when: new_nodes | default([]) | length < 1
+
+    - name: Print a list of new nodes
+      run_once: true   # noqa run-once
+      ansible.builtin.debug:
+        var: new_nodes
+      tags: always
+
+    - name: Update pg_hba.conf
+      ansible.builtin.template:
+        src: templates/pg_hba.conf.j2
+        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: "0640"
+      notify: "reload postgres"
+      when: not new_node | default(false) | bool
+      tags: pg_hba, pg_hba_generate
+
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+      environment: "{{ proxy_env | default({}) }}"
+      when:
+        - new_node | default(false) | bool
+        - ansible_os_family == "Debian"
+        - installation_method == "repo"
+
+    - name: Add host to group new_replica (in-memory inventory)
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: new_replica
+      loop: "{{ new_nodes }}"
+      changed_when: false
+      tags: always
+
+    # Restart Patroni Cluster
+    - import_tasks: patroni_restart.yml
+      when: inventory_hostname == groups.master[0]
+
+  when: inventory_hostname in groups['postgres_cluster']
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+
+- import_tasks: postgresql/extensions-install/main.yml
+  when: inventory_hostname in groups['new_replica']
+
+- name: Fetch patroni.yml conf file from master
+  run_once: true
+  ansible.builtin.fetch:
+    src: /etc/patroni/patroni.yml
+    dest: files/patroni.yml
+    validate_checksum: true
+    flat: true
+  delegate_to: "{{ groups.master[0] }}"
+
+- name: Prepare PostgreSQL | fetch pg_hba.conf file from master
+  run_once: true
+  ansible.builtin.fetch:
+    src: "{{ postgresql_conf_dir }}/pg_hba.conf"
+    dest: files/pg_hba.conf
+    validate_checksum: true
+    flat: true
+  delegate_to: "{{ groups.master[0] }}"
+
+- import_tasks: pg_install_cluster.yml
+  when: inventory_hostname in groups['new_replica']
+  vars:
+    existing_pgcluster: true
+  tags: patroni, patroni_install

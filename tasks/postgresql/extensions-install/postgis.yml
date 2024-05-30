@@ -1,0 +1,12 @@
+---
+
+- name: pgrouting - Install pgrouting postgres extensions
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - postgresql-{{ postgresql_version }}-postgis-3
+  tags: postgresql_extensions_install, pgrouting
+
+...

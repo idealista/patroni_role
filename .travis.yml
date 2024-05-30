@@ -1,0 +1,30 @@
+---
+dist: focal
+language: python
+os: linux
+python: "3.10"
+services:
+  - docker
+before_install:
+  - echo '{"default-cgroupns-mode":"host"}' | sudo tee /etc/docker/daemon.json
+  - sudo systemctl restart docker
+install:
+  - pip install pipenv
+  - pipenv sync
+env:
+  jobs:
+    - DOCKER_BASE_IMAGE=debian:bookworm-slim
+    - DOCKER_BASE_IMAGE=debian:bullseye-slim
+    - DOCKER_BASE_IMAGE=debian:buster-slim
+
+script:
+  - export DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
+  - pipenv run molecule test
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/
+  email:
+    if: branch = master
+    on_success: change
+    on_failure: always
+    recipients:
+      - desarrollo.benders@idealista.com

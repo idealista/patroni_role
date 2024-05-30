@@ -1,0 +1,24 @@
+---
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "../../vars/{{ ansible_os_family }}.yml"
+  tags: always
+- name: Include main variables
+  ansible.builtin.include_vars: "../../vars/main.yml"
+  tags: always
+
+- name: Prepare PostgreSQL | make sure the postgresql config files exists
+  ansible.builtin.stat:
+    path: "{{ postgresql_conf_dir }}/postgresql.conf"
+  register: postgresql_conf_file
+- name: Check Postgres installed
+  set_fact:
+    postgres_installed: "{{ postgresql_conf_file.stat.exists }}"
+
+- name: Prepare PostgreSQL | make sure the PgBouncer config files exists
+  ansible.builtin.stat:
+    path: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
+  register: pgbouncer_conf_file
+- name: Check PgBouncer installed
+  set_fact:
+    pgbouncer_installed: "{{ pgbouncer_conf_file.stat.exists }}"

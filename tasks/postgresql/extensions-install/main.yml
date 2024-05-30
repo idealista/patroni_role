@@ -1,0 +1,13 @@
+---
+
+- name: Include extension to install
+  include_tasks: "{{ extension_item | lower }}.yml"
+  loop: "{{ postgresql_extensions_install | flatten(1) }}"
+  loop_control:
+    loop_var: extension_item
+  when:
+    - postgresql_extensions_install is defined
+    - postgresql_extensions_install | length > 0
+  tags: postgresql_extensions_install
+
+...

@@ -1,0 +1,5 @@
+---
+
+is_master: false
+postgresql_exists: true
+replica_reset_data: true

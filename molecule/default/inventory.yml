@@ -1,0 +1,16 @@
+[pgdbk_cluster_local:children]
+master
+replica
+
+[master]
+pgdbk-test1 ansible_connection=docker ansible_ssh_user=root
+
+[replica]
+pgdbk-test[2:3] ansible_connection=docker ansible_ssh_user=root
+
+[consul]
+consul-server-test ansible_connection=docker ansible_ssh_user=root
+
+[postgres_cluster:children]
+pgdbk_cluster_local
+

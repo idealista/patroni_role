@@ -1,0 +1,20 @@
+---
+
+- name: Converge
+  hosts: postgres_cluster
+ 
+  pre_tasks:
+
+    - name: pre-checks postgres
+      import_tasks: "../../tasks/pre-checks/postgres.yml"
+      tags: always
+
+  roles:
+    - role: rsyslog_role
+    - role: consul_role
+    - role: postgresql_role
+      when: postgresql_install | bool and not postgres_installed
+    - role: pgbouncer_role
+      when: pgbouncer_install | bool and not pgbouncer_installed
+    - role: patroni_role
+ 

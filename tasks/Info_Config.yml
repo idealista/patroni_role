@@ -1,0 +1,79 @@
+---
+
+- name: Make sure handlers are flushed immediately
+  ansible.builtin.meta: flush_handlers
+
+- name: pg_group information
+  ansible.builtin.debug:
+    msg: |
+      "pg_major_release: {{ pg_major_release }}"
+      "pg_cluster_name: {{ pg_cluster_name }}"
+      "pg_user: {{ pg_user }}"
+      "pg_group: {{ pg_group }}"
+      "pg_port: {{ pg_port }}"
+      "pg_service_state: {{ pg_service_state }}"
+      "pg_service_enabled: {{ pg_service_enabled }}"
+      "pg_automatic_startup_configuration: {{ pg_automatic_startup_configuration }}"
+      "pg_os_tuning: {{ pg_os_tuning }}"
+      "pg_users_no_log: {{ pg_users_no_log }}"
+      "pg_users: {{ pg_users }}"
+      "pg_databases: {{ pg_databases }}"
+      "pg_custom_options: {{ pg_custom_options }}"
+      "pg_bin_dir: {{ pg_bin_dir }}"
+      "pg_data_directory: {{ pg_data_directory }}"
+      "pg_password_encryption: {{ pg_password_encryption }}"
+  tags: always
+
+- name: postgresql information
+  ansible.builtin.debug:
+    msg: |
+      postgresql_cluster_name: "{{ postgresql_cluster_name }}"
+      postgresql_version: "{{ postgresql_version }}"
+      postgresql_port: "{{ postgresql_port }}"
+      postgresql_encoding: "{{ postgresql_encoding }}"
+      postgresql_locale: "{{ postgresql_locale }}"
+      postgresql_data_checksums: "{{ postgresql_data_checksums }}"
+      postgresql_password_encryption_algorithm: "{{ postgresql_password_encryption_algorithm }}"
+      host_ip: "{{ hostvars[inventory_hostname].host_ip | default(hostvars[inventory_hostname]['ansible_default_ipv4']['address']) | default('no found') }}"
+      "{{ hostvars[inventory_hostname]['host_ip'] | default (hostvars[inventory_hostname]['ansible_default_ipv4']['address']) }}/32 {{ postgresql_password_encryption_algorithm }}"
+      groups['postgres_cluster']: "{{ groups['postgres_cluster'] }}"
+      postgresql_install: "{{ postgresql_install }}"
+      postgresql_conf_file: "{{ postgresql_conf_file  | default('') }}"
+  tags: always
+
+- name: pgbouncer information
+  ansible.builtin.debug:
+    msg: |
+      "pgbouncer_install: {{ pgbouncer_install }}"
+      "pgbouncer_conf_dir: {{ pgbouncer_conf_dir }}"
+      "pgbouncer_log_dir: {{ pgbouncer_log_dir }}"
+      "pgbouncer_listen_addr: {{ pgbouncer_listen_addr }}"
+      "pgbouncer_listen_port: {{ pgbouncer_listen_port }}"
+      "pgbouncer_max_client_conn: {{ pgbouncer_max_client_conn }}"
+      "pgbouncer_max_db_connections: {{ pgbouncer_max_db_connections }}"
+      "pgbouncer_default_pool_size: {{ pgbouncer_default_pool_size }}"
+      "pgbouncer_query_wait_timeout: {{ pgbouncer_query_wait_timeout }}"
+      "pgbouncer_default_pool_mode: {{ pgbouncer_default_pool_mode }}"
+      "pgbouncer_admin_users: {{ pgbouncer_admin_users }}"
+      "pgbouncer_stats_users: {{ pgbouncer_stats_users }}"
+      "pgbouncer_ignore_startup_parameters: {{ pgbouncer_ignore_startup_parameters }}"
+      "pgbouncer_auth_type: {{ pgbouncer_auth_type }}"
+      "pgbouncer_auth_user: {{ pgbouncer_auth_user }}"
+      "pgbouncer_auth_hba_file: {{ pgbouncer_auth_hba_file }}"
+      "pgbouncer_auth_username: {{ pgbouncer_auth_username }}"
+      "pgbouncer_auth_password: {{ pgbouncer_auth_password }}"
+      "pgbouncer_auth_dbname: {{ pgbouncer_auth_dbname }}"
+      "pgbouncer_log_connections: {{ pgbouncer_log_connections }}"
+      "pgbouncer_log_disconnections: {{ pgbouncer_log_disconnections }}"
+      "pgbouncer_install: {{ pgbouncer_install }}"
+  tags: always
+
+- name: cluster information
+  ansible.builtin.debug:
+    msg: |
+      "is_cluster_installed: {{ is_cluster_installed | default(false) }}"
+      "is_add_node_cluster: {{ is_add_node_cluster | default(false) }}"
+      "new_node: {{ new_node | default(false) }}"
+
+
+...

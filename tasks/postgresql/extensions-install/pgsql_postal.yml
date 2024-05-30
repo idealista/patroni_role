@@ -1,0 +1,100 @@
+---
+
+- block:
+    - name: psql_postal - Verificar si la extensión psql_postal ya está instalada
+      shell: |
+        pg_config --pkglibdir
+      register: pkglibdir_result
+      changed_when: false
+
+    - name: psql_postal - Verificar la presencia de la extensión psql_postal
+      stat:
+        path: "{{ pkglibdir_result.stdout_lines[0] }}/postal.so"
+      register: extension_check
+
+    - name: psql_postal - psql_postal está presente
+      debug:
+        msg: " psql-postal  esta instalado"
+      when: extension_check.stat.exists
+
+    - name: psql_postal - Instalar psql_postal extension
+      block:
+        - name: psql_postal - Verificar si libpostal está instalada
+          stat:
+            path: "/usr/local/lib/libpostal.so"
+          register: libpostal_check
+        - name: psql_postal - libpostal está presente
+          debug:
+            msg: " libpostal esta instalado"
+          when: libpostal_check.stat.exists
+        - name: psql_postal - Instalar libpostal
+          block:
+            - name: psql_postal - libpostal - Instalar dependencias
+              apt:
+                name: "{{ item }}"
+                state: present
+              loop:
+                - build-essential
+                - postgresql-server-dev-{{ postgresql_version }}
+                - make
+                - curl
+                - automake
+                - libtool
+                - git
+
+            - name: psql_postal - libpostal - crear path del repositorio
+              file:
+                path: "/data/pg_extensions/pgsql-postal"
+                state: directory
+                recurse: true
+
+            - name: psql_postal - libpostal - Instalar repositorio
+              git:
+                repo: 'https://github.com/openvenues/libpostal'
+                dest: "/data/pg_extensions/pgsql-postal/libpostal"
+
+            - name: psql_postal - libpostal - Instalar libreria
+              shell: |
+                cd /data/pg_extensions/pgsql-postal/libpostal
+                ./bootstrap.sh
+                mkdir /data/pg_extensions/pgsql-postal/data
+                ./configure --datadir=/data/pg_extensions/pgsql-postal/data
+                make -j4
+                make install
+                ldconfig
+          when: libpostal_check.stat.exists == false
+
+        - name: psql_postal - postal extesion - Instalar dependencias
+          apt:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - build-essential
+            - postgresql-server-dev-{{ postgresql_version }}
+            - make
+            - curl
+            - automake
+            - libtool
+            - git
+
+        - name: psql_postal - postal extesion - crear path del repositorio
+          file:
+            path: "/data/pg_extensions/pgsql-postal"
+            state: directory
+            recurse: true
+
+        - name: psql_postal - postal extesion - Instalar repositorio
+          git:
+            repo: 'https://github.com/pramsey/pgsql-postal'
+            dest: "/data/pg_extensions/pgsql-postal/pgsql-postal"
+
+        - name: psql_postal - postal extesion - Instalar libreria
+          shell: |
+            cd /data/pg_extensions/pgsql-postal/pgsql-postal
+            make
+            make install
+
+      when: extension_check.stat.exists == false
+
+  tags: postgresql_extensions_install, psql_postal
+...

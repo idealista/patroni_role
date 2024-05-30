@@ -1,0 +1,94 @@
+---
+driver:
+  name: docker
+  options:
+    role-file: requirements.yml
+
+lint: |
+    yamllint .
+    ansible-lint .
+
+platforms:
+  - &pgdbk-anchor
+    name: pgdbk-test1
+    networks:
+      - name: test_pgdbk_network
+    image: ${DOCKER_BASE_IMAGE:-debian:bookworm-slim}
+    privileged: false
+    exposed_ports:
+      - 80/tcp
+      - 9100/tcp
+      - 9110/tcp
+      - 22/tcp
+      - 2379/tcp # if dcs_type: "etcd"
+      - 2380/tcp # if dcs_type: "etcd"
+      - 8300/tcp # if dcs_type: "consul"
+      - 8301/tcp # if dcs_type: "consul"
+      - 8302/tcp # if dcs_type: "consul"
+      - 8500/tcp # if dcs_type: "consul"
+      - 8600/tcp # if dcs_type: "consul"
+      - 8008/tcp
+      - 5432/tcp
+      - 6432/tcp
+    volumes:
+      - '/sys/fs/cgroup:/sys/fs/cgroup'
+      - '/usr/local/share/ca-certificates:/usr/local/share/ca-certificates'
+      - '/usr/share/zoneinfo/Europe/Madrid:/etc/localtime'
+    tmpfs:
+      - '/run'
+      - '/run/lock'
+    command: '/lib/systemd/systemd'
+    dns_search_domains:
+      - idealista
+      - sys.idealista
+  - <<: *pgdbk-anchor
+    name: pgdbk-test2
+  - <<: *pgdbk-anchor
+    name: pgdbk-test3
+ 
+  - name: consul-server-test
+    image: consul:1.2.3
+    privileged: false
+    pre_build_image: true  # To skip the use of Dockerfiles
+    exposed_ports:
+      - 8300/tcp
+      - 8301/tcp
+      - 8301/udp
+      - 8302/tcp
+      - 8302/udp
+      - 8500/tcp
+      - 8600/tcp
+      - 8600/udp
+    published_ports:
+      - 8500:8500/tcp
+    volumes:
+      - '/usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro'
+      - '/usr/share/zoneinfo/Europe/Madrid:/etc/localtime:ro'
+    networks:
+      - name: test_pgdbk_network
+    purge_networks: yes
+    command: "agent -server -datacenter=mainlocal -client 0.0.0.0 -ui -bootstrap -log-level=debug"
+
+provisioner:
+  name: ansible
+  inventory:
+    links:
+      group_vars: group_vars/
+      hosts: inventory.yml
+  env:
+    # Wish we find a better solution in the future
+    ANSIBLE_VAULT_PASSWORD_FILE: ../common/vault/get_passwd.py
+  lint:
+    name: ansible-lint
+
+  config_options:
+    defaults:
+      stdout_callback: yaml
+      bin_ansible_callbacks: True
+      display_skipped_hosts: false
+
+scenario:
+  name: default
+
+verifier:
+  name: ansible

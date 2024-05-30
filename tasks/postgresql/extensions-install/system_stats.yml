@@ -1,0 +1,77 @@
+---
+- block:
+    - name: system_stats - Verificar si la extensión system_stats ya está instalada
+      shell: |
+        pg_config --pkglibdir
+      register: pkglibdir_result
+      changed_when: false
+
+    - name: system_stats - Verificar la presencia de la extensión system_stats
+      stat:
+        path: "{{ pkglibdir_result.stdout_lines[0] }}/system_stats.so"
+      register: extension_check
+
+    - name: system_stats - system_stats está presente
+      debug:
+        msg: "system_stats esta instalado"
+      when: extension_check.stat.exists
+
+    - name: system_stats - Instalar extensión system_stats si no está instalada
+      block:
+
+        - name: system_stats - Set up variables
+          set_fact:
+            postgresql_version: "{{ postgresql_version if postgresql_version is defined else '16' }}"
+            system_stats_repo: https://github.com/EnterpriseDB/system_stats
+            system_stats_dir: /tmp/system_stats
+
+        - name: system_stats - Ensure PostgreSQL development packages are installed
+          apt:
+            name: postgresql-server-dev-{{ postgresql_version }}
+            state: present
+          when: ansible_os_family == 'Debian'
+
+        - name: system_stats - Ensure PostgreSQL development packages are installed
+          yum:
+            name: postgresql{{ postgresql_version }}-devel
+            state: present
+          when: ansible_os_family == 'RedHat'
+
+        - name: system_stats - Ensure required build tools are installed (Debian/Ubuntu)
+          apt:
+            name:
+              - build-essential
+              - libxml2-dev
+              - git
+            state: present
+          when: ansible_os_family == 'Debian'
+
+        - name: system_stats - Ensure required build tools are installed (RedHat/CentOS)
+          yum:
+            name:
+              - gcc
+              - make
+              - libxml2-devel
+              - git
+            state: present
+          when: ansible_os_family == 'RedHat'
+
+        - name: system_stats - Clone system_stats repository
+          git:
+            repo: "{{ system_stats_repo }}"
+            dest: "{{ system_stats_dir }}"
+            version: master
+
+        - name: system_stats - Compile system_stats extension
+          command: make
+          args:
+            chdir: "{{ system_stats_dir }}"
+
+        - name: system_stats - Install system_stats extension
+          command: make install
+          args:
+            chdir: "{{ system_stats_dir }}"
+
+      when: extension_check.stat.exists == false
+
+  tags: postgresql_extensions_install, system_stats
