@@ -1,0 +1,62 @@
+---
+
+- block:
+
+    - name: pgvector - get pkglibdir
+      shell: |
+        pg_config --pkglibdir
+      register: pkglibdir_result
+      changed_when: false
+
+    - name: pgvector - Verificar la presencia de la extensión vector
+      stat:
+        path: "{{ pkglibdir_result.stdout_lines[0] }}/vector.so"
+      register: extension_check
+
+    - name: pgvector - vector está presente
+      debug:
+        msg: "vector esta instalado"
+      when: extension_check.stat.exists
+
+    - name: pgvector - Instalar extensión vector si no está instalada
+      block:
+
+        - name: Actualizar el caché de apt
+          apt:
+            update_cache: true
+
+        - name: Instalar dependencias necesarias
+          apt:
+            name:
+              - postgresql-server-dev-{{ postgresql_version }}
+              - git
+              - make
+            state: present
+
+        - name: Clonar el repositorio pgvector
+          git:
+            repo: "https://github.com/pgvector/pgvector.git"
+            dest: /tmp/pgvector
+            version: master
+
+        - name: Compilar e instalar pgvector
+          make:
+            chdir: /tmp/pgvector
+            target: install
+
+        - name: Limpiar archivos temporales
+          file:
+            path: /tmp/pgvector
+            state: absent
+            force: true
+
+      when: extension_check.stat.exists == false
+
+  when: postgresql_version | int >= 12
+  tags: postgresql_extensions_install, pgvector
+
+- name: pgvector - vector postgres no permitida
+  debug:
+    msg: "pgversion extension has not been installed, requires postgresql 12   or higher"
+  when: postgresql_version | int < 12
+  tags: postgresql_extensions_install, pgvector
