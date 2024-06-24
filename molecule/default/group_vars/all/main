@@ -52,6 +52,8 @@ postgresql:
   #  - 'mysql_fdw' 
   #  - 'oracle_fdw' 
   #  - 'pgrouting'  
+  #  - 'pgvector'
+  #  - 'pgvectorscale'
   #  - 'pgsql_postal'  
   #  - 'postgis'
   #  - 'rum'  

@@ -1,7 +1,7 @@
 ---
 
 - name: Include extension to install
-  include_tasks: "{{ extension_item | lower }}.yml"
+  include_tasks: "{{ role_path }}/tasks/postgresql/extensions-install/{{ extension_item | lower }}.yml"
   loop: "{{ postgresql_extensions_install | flatten(1) }}"
   loop_control:
     loop_var: extension_item

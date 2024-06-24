@@ -1,0 +1,103 @@
+---
+
+- block:
+
+    - name: pgvectorscale - get pkglibdir
+      shell: |
+        pg_config --pkglibdir
+      register: pkglibdir_result
+      changed_when: false
+
+    - name: pgvectorscale - Verificar la presencia de la extensión vector
+      stat:
+        path: "{{ pkglibdir_result.stdout_lines[0] }}/vector.so"
+      register: extension_check
+
+    - name: pgvectorscale - vector está presente
+      debug:
+        msg: "vector esta instalado"
+      when: extension_check.stat.exists
+
+    - name: pgvectorscale - Instalar extensión vector si no está instalada
+      block:
+
+        - name: Include vector extension to install
+          include_tasks: "{{ role_path }}/tasks/postgresql/extensions-install/pgvector.yml"
+
+      when: extension_check.stat.exists == false
+
+    - name: pgvectorscale - Verificar la presencia de la extensión vectorscale
+      find:
+        paths: "{{ pkglibdir_result.stdout_lines[0] }}"
+        patterns: "vectorscale*.so"
+      register: extension_check
+
+    - name: pgvectorscale - vectorscale está presente
+      debug:
+        msg: "vector esta instalado"
+      when: extension_check.matched > 0
+
+    - name: pgvectorscale - Instalar extensión vectorscale si no está instalada
+      block:
+
+        - name: pgvectorscale - Actualizar el caché de apt
+          apt:
+            update_cache: true
+
+        - name: pgvectorscale - Instalar dependencias necesarias
+          apt:
+            name:
+              - postgresql-server-dev-{{ postgresql_version }}
+              - git
+              - make
+              - gcc
+              - pkg-config
+              - clang
+              - libssl-dev
+              - libopenblas-dev
+              - curl
+            state: present
+
+        - name: pgvectorscale - Install Rustup
+          shell: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          args:
+            creates: /root/.cargo/bin/rustc  # Esto previene que se ejecute si Rust ya está instalado
+          environment:
+            - CARGO_HOME: /root/.cargo
+            - RUSTUP_HOME: /root/.rustup
+
+        - name: pgvectorscale - Install cargo-pgrx
+          shell: /root/.cargo/bin/cargo install --locked cargo-pgrx
+
+        - name: pgvectorscale - pgrx development environment
+          shell: /root/.cargo/bin/cargo pgrx init --pg16 pg_config
+
+        - name: pgvectorscale - Clonar el repositorio pgvectorscale
+          git:
+            repo: "https://github.com/timescale/pgvectorscale.git"
+            dest: /tmp/pgvectorscale
+            version: main
+
+        - name: pgvectorscale - Configurar RUSTFLAGS y compilar e instalar pgvectorscale
+          shell: |
+            export RUSTFLAGS="-C target-feature=+avx2,+fma"
+            /root/.cargo/bin/cargo pgrx install --release
+          args:
+            chdir: /tmp/pgvectorscale/pgvectorscale
+
+        - name: pgvectorscale - Limpiar archivos temporales
+          file:
+            path: /tmp/pgvectorscale
+            state: absent
+            force: true
+
+      when: extension_check.matched == 0
+
+  when: postgresql_version | int >= 16
+  tags: postgresql_extensions_install, pgvectorscale
+
+- name: pgvectorscale - versión de postgres no permitida
+  debug:
+    msg: "pgvectorscale extension has not been installed, requires postgresql 16 or higher"
+  when: postgresql_version | int < 16
+  tags: postgresql_extensions_install, pgvectorscale
