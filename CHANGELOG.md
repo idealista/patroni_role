@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a ch
 ### Removed
 ### Fixed
 
-## [1.10.1](https://github.com/idealista/patroni_role/tree/1.0.1) (2024-06-20)
+## [1.0.1](https://github.com/idealista/patroni_role/tree/1.0.1) (2024-06-20)
 ### [Full Changelog](https://github.com/idealista/patroni_role/compare/1.0.0...1.0.1)
 ### Changed
 - *[#2](https://github.com/idealista/consul_role/issues/2) task find oracle instantclient* @ledepedro
