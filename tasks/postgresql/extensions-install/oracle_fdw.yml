@@ -20,19 +20,35 @@
     - name: oracle_fdw - Instalar extensión oracle_fdw si no está instalada
       block:
         - name: oracle_fdw - Verificar si oracle instantclient sdk está instalada
-          shell: "find / -name oci.h"
+          find:
+            paths: /
+            patterns: oci.h
+            recurse: true
+            file_type: file
           register: find_oci_h
+
         - name: oracle_fdw - Verificar si oracle instantclient sqlplus está instalada
-          shell: "find / -name libsqlplus.so"
+          find:
+            paths: /
+            patterns: libsqlplus.so
+            recurse: true
+            file_type: file
           register: find_sqlplus
+
         - name: oracle_fdw - Oracle instantclient presente
           debug:
             msg: "oracle_fdw - oracle instantclient esta instalado"
-          when: (find_oci_h.stdout_lines | length | bool)  and
-                (find_sqlplus.stdout_lines | length | bool)
+          when: find_oci_h.matched > 0  and
+                find_sqlplus.matched > 0
+
         - name: oracle_fdw - Instalar oracle instantclient
           block:
-            - name: Create /data/oracle dir
+            - name: Instalar unzip si no está presente
+              become: true
+              package:
+                name: unzip
+                state: present
+            - name: Crear /data/oracle dir
               file:
                 path: "/data/oracle"
                 state: directory
@@ -93,8 +109,8 @@
               shell: source /etc/profile.d/oracle-instantclient.sh
               args:
                 executable: /bin/bash
-          when: (find_oci_h.stdout_lines | length | bool) == false or
-                (find_sqlplus.stdout_lines | length | bool) == false
+          when: find_oci_h.matched == 0  or
+                find_sqlplus.matched == 0
 
         - name: oracle_fdw - Instalar dependencias
           apt:

@@ -34,7 +34,7 @@ postgresql:
 #  data_checksums: true
 #  password_encryption_algorithm: 'scram-sha-256'
 #  postgresql.extensions: []
-#  postgresql.extensions_install: []  #  'h3-pg', 'mysql_fdw', 'oracle_fdw', 'pgrouting', 'pgsql_postal', 'postgis', 'rum'
+#  postgresql.extensions_install: []  #  'h3-pg', 'mysql_fdw', 'oracle_fdw', 'pgrouting', 'pgsql_postal', 'pgvector', 'pgvectorscale', 'postgis', 'rum'
 #  h3_install_version: 'latest'
 #  max_connections: '500'
 #  superuser_reserved_connections: '5'
