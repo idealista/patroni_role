@@ -82,33 +82,6 @@ patroni_etcd_protocol: ""             # (optional) http or https, if not specifi
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
-# if dcs_type: "consul"
-consul_version: "1.2.3"
-consul_config_path: "/etc/consul"
-consul_configd_path: "{{ consul_config_path }}/conf.d"
-consul_data_path: "/var/lib/consul"
-consul_domain: "consul"  # Consul domain name
-consul_datacenter: "mainlocal"  # Datacenter label (can be specified for each host in the inventory)
-consul_disable_update_check: true  # Disables automatic checking for security bulletins and new version releases
-consul_enable_script_checks: true  # This controls whether health checks that execute scripts are enabled on this agent
-consul_enable_local_script_checks: true  # Enable them when they are defined in the local configuration files
-consul_ui: false  # Enable the consul UI?
-consul_syslog_enable: true  # Enable logging to syslog
-consul_iface: "{{ ansible_default_ipv4.interface }}"  # specify the interface name with a Private IP (ex. "enp7s0")
-# TLS
-# You can enable TLS encryption by dropping a CA certificate, server certificate, and server key in roles/consul/files/
-consul_tls_enable: false
-consul_tls_ca_crt: "ca.crt"
-consul_tls_server_crt: "server.crt"
-consul_tls_server_key: "server.key"
-# DNS
-consul_recursors: []  # List of upstream DNS servers
-consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
-consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
-consul_dnsmasq_servers:  # Upstream DNS servers used by dnsmasq
-  - "8.8.8.8"
-  - "9.9.9.9"
-
 patroni_consul_host: "{{ patroni.consul_host | default ('127.0.0.1:8500') }}"
 patroni_consul_register_service: "{{ patroni.consul_register_service | default (false) }}"
 patroni_consul_checks: "{{ patroni.consul_checks | default ([]) }}"
