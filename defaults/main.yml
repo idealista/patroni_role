@@ -20,9 +20,51 @@ patroni:
 #  replication_username: "replicator"
 #  replication_password: "replicator-pass"
 #  pending_restart: false
+#  consul_namespace: 'service'
+#  consul_register_service: "{{ omit }}"
 #  consul_host: '127.0.0.1:8500'
-#  consul_register_service: false
+#  consul_url: "{{ omit }}"
+#  consul_port: "{{ omit }}"
+#  consul_scheme: "{{ omit }}"
+#  consul_token: "{{ omit }}"
+#  consul_verify: "{{ omit }}"
+#  consul_cacert: "{{ omit }}"
+#  consul_cert: "{{ omit }}"
+#  consul_key: "{{ omit }}"
+#  consul_dc: "{{ omit }}"
+#  consul_consistency: "{{ omit }}"
 #  consul_checks: []
+#  consul.service_tags: "{{ omit }}"
+#  consul_service_check_interval: "{{ omit }}"
+#  consul_service_check_tls_server_name: "{{ omit }}"
+#  restapi_port: 8008
+#  ttl: 30
+#  loop_wait: 10
+#  retry_timeout: 10
+#  maximum_lag_on_failover: 1048576
+#  master_start_timeout: 300
+#  callbacks: []
+#  tandby_cluster:
+#    host: ""
+#    port: "5432"
+#  log_dir: '/var/log/patroni'
+#  log_leve: 'info'
+#  log_traceback_level: 'error'
+#  log_format: '%(asctime)s %(levelname)s: %(message)s'
+#  log_dateformat: ''
+#  log_max_queue_size: 1000
+#  log_file_num: 4
+#  log_file_size: 25000000  # bytes
+#  log_loggers_patroni_postmaster: 'warning'
+#  log_loggers_urllib3: 'warning'  # or 'debug'
+#  watchdog_mode: 'automatic'  # or 'off', 'required'
+#  watchdog_device: '/dev/watchdog'
+#  postgresql_use_pg_rewind: true  # or 'false'
+#  remove_data_directory_on_rewind_failure: false  # or 'true' (if use_pg_rewind: 'true')
+#  remove_data_directory_on_diverged_timelines: false  # or 'true'
+#  cluster_bootstrap_method: 'initdb'  # or "wal-g", "pgbackrest", "pg_probackup"
+#  create_replica_methods:
+#    - basebackup
 
 postgresql:
 #  install: true  # or 'false' if postgres is already installed

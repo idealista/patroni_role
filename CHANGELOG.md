@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a ch
 ### Removed
 ### Fixed
 
+## [1.0.3](https://github.com/idealista/patroni_role/tree/1.0.3) (2024-07-12)
+### [Full Changelog](https://github.com/idealista/patroni_role/compare/1.0.2...1.0.3)
+### Added
+- *[#11](https://github.com/idealista/patroni_role/issues/11) Add all consul configuration options in patroni_role* @ledepedro
+
 ## [1.0.2](https://github.com/idealista/patroni_role/tree/1.0.2) (2024-07-03)
 ### [Full Changelog](https://github.com/idealista/patroni_role/compare/1.0.1...1.0.2)
 ### Changed

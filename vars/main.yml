@@ -79,16 +79,30 @@ patroni_etcd_password: ""             # (optional) password for etcd authenticat
 patroni_etcd_protocol: ""             # (optional) http or https, if not specified http is used
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
+# https://patroni.readthedocs.io/en/latest/yaml_configuration.html
 
+patroni_consul_namespace: "{{ patroni.consul_namespace | default('service') }}"
+patroni_consul_register_service: "{{ patroni.consul_register_service | default (omit) }}"
 patroni_consul_host: "{{ patroni.consul_host | default ('127.0.0.1:8500') }}"
-patroni_consul_register_service: "{{ patroni.consul_register_service | default (false) }}"
+patroni_consul_url: "{{ patroni.consul_url | default(omit) }}"   # http(s)://host:port.
+patroni_consul_port: "{{ patroni.consul_port | default(omit) }}"   # (optional) Consul port.
+patroni_consul_scheme: "{{ patroni.consul_scheme | default(omit) }}"   # (optional) http or https, defaults to http.
+patroni_consul_token: "{{ patroni.consul_token | default(omit) }}"   # (optional) ACL token.
+patroni_consul_verify: "{{ patroni.consul_verify | default(omit) }}"   # (optional) whether to verify the SSL certificate for HTTPS requests.
+patroni_consul_cacert: "{{ patroni.consul_cacert | default(omit) }}"   # (optional) The ca certificate. If present it will enable validation.
+patroni_consul_cert: "{{ patroni.consul_cert | default(omit) }}"   # (optional) file with the client certificate.
+patroni_consul_key: "{{ patroni.consul_key | default(omit) }}"   # (optional) file with the client key. Can be empty if the key is part of cert.
+patroni_consul_dc: "{{ patroni.consul_dc | default(omit) }}"   # (optional) Datacenter to communicate with. By default the datacenter of the host is used.
+patroni_consul_consistency: "{{ patroni.consul_consistency | default(omit) }}"   # (optional) Select consul consistency mode. Possible values are default, consistent, or stale (more details in consul API reference)
 patroni_consul_checks: "{{ patroni.consul_checks | default ([]) }}"
 #  - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/primary", interval: "2s" }
 #  - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }  # comment out this check if pgbouncer_install: false
 #  - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/replica", interval: "2s" }
 #  - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
+patroni_consul_service_tags: "{{ patroni_consul.service_tags | default(omit) }}"   # (optional) additional static tags to add to the Consul service apart from the role (master/primary/replica/standby-leader). By default an empty list is used.
+patroni_consul_service_check_interval: "{{ patroni.consul_service_check_interval | default(omit) }}"   # (optional) how often to perform health check against registered url. Defaults to ‘5s’.
+patroni_consul_service_check_tls_server_name: "{{ patroni.consul_service_check_tls_server_name | default(omit) }}"   # (optional) overide SNI host when connecting via TLS, see also consul agent check API reference.
+
 
 # PostgreSQL variables
 postgresql_cluster_name: "{{ postgresql.cluster_name | default('main') }}"
@@ -297,15 +311,15 @@ pgbouncer_pools_default:
 pgbouncer_pools: "{{ pgbouncer_pools_default | union(pgbouncer.pools | default([])) }}"
 
 # Extended variables (optional)
-patroni_restapi_port: 8008
-patroni_ttl: 30
-patroni_loop_wait: 10
-patroni_retry_timeout: 10
-patroni_maximum_lag_on_failover: 1048576
-patroni_master_start_timeout: 300
+patroni_restapi_port: "{{ patroni.restapi_port | default(8008) }}"
+patroni_ttl: "{{ patroni.ttl | default(30) }}"
+patroni_loop_wait: "{{ patroni.loop_wait | default(10) }}"
+patroni_retry_timeout: "{{ patroni.retry_timeout | default(10) }}"
+patroni_maximum_lag_on_failover: "{{ patroni.maximum_lag_on_failover | default(1048576) }}"
+patroni_master_start_timeout: "{{ patroni.master_start_timeout | default(300) }}"
 
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html?highlight=callbacks#dynamic-configuration-settings
-patroni_callbacks: []
+patroni_callbacks: "{{ patroni.callbacks | default([]) }}"
 #  - {action: "on_role_change", script: ""}
 #  - {action: "on_stop", script: ""}
 #  - {action: "on_restart", script: ""}
@@ -316,49 +330,51 @@ patroni_callbacks: []
 # Requirements:
 # 1. the cluster name for Standby Cluster must be unique ('patroni_cluster_name' variable)
 # 2. the IP addresses (or network) of the Standby Cluster servers must be added to the pg_hba.conf of the Main Cluster ('postgresql_pg_hba' variable).
-patroni_standby_cluster:
+__patroni_standby_cluster_default:
   host: ""  # an address of remote master
   port: "5432"  # a port of remote master
 #  primary_slot_name: ""  # which slot on the remote master to use for replication (optional)
 #  restore_command: ""  # command to restore WAL records from the remote master to standby leader (optional)
 #  recovery_min_apply_delay: ""  # how long to wait before actually apply WAL records on a standby leader (optional)
+patroni_standby_cluster: "{{ patroni.standby_cluster | default(__patroni_standby_cluster_default) }}"
 
 patroni_log_destination: logfile  # stderr or 'logfile'
 # if patroni_log_destination: logfile
-patroni_log_dir: /var/log/patroni
-patroni_log_level: info
-patroni_log_traceback_level: error
-patroni_log_format: "%(asctime)s %(levelname)s: %(message)s"
-patroni_log_dateformat: ""
-patroni_log_max_queue_size: 1000
-patroni_log_file_num: 4
-patroni_log_file_size: 25000000  # bytes
-patroni_log_loggers_patroni_postmaster: warning
-patroni_log_loggers_urllib3: warning  # or 'debug'
+patroni_log_dir: "{{ patroni.log_dir | default('/var/log/patroni') }}"
+patroni_log_level: "{{ patroni.log_level | default('info') }}"
+patroni_log_traceback_level: "{{ patroni.log_traceback_level | default('error') }}"
+patroni_log_format: "{{ patroni.log_format | default('%(asctime)s %(levelname)s: %(message)s') }}"
+patroni_log_dateformat: "{{ patroni.log_dateformat | default('') }}"
+patroni_log_max_queue_size: "{{ patroni.log_max_queue_size | default(1000) }}"
+patroni_log_file_num: "{{ patroni.log_file_num | default(4) }}"
+patroni_log_file_size: "{{ patroni.log_file_size | default(25000000) }}"  # bytes
+patroni_log_loggers_patroni_postmaster: "{{ patroni.log_loggers_patroni_postmaster | default('warning') }}"
+patroni_log_loggers_urllib3: "{{ patroni.log_loggers_urllib3 | default('warning') }}"  # or 'debug'
 
-patroni_watchdog_mode: automatic  # or 'off', 'required'
-patroni_watchdog_device: /dev/watchdog
+patroni_watchdog_mode: "{{ patroni.watchdog_mode | default('automatic') }}"  # or 'off', 'required'
+patroni_watchdog_device: "{{ patroni.watchdog_device | default('/dev/watchdog') }}"
 
-patroni_postgresql_use_pg_rewind: true  # or 'false'
+patroni_postgresql_use_pg_rewind: "{{ patroni.postgresql_use_pg_rewind | default(true) }}"  # or 'false'
 # try to use pg_rewind on the former leader when it joins cluster as a replica.
 
-patroni_remove_data_directory_on_rewind_failure: false  # or 'true' (if use_pg_rewind: 'true')
+patroni_remove_data_directory_on_rewind_failure: "{{ patroni.remove_data_directory_on_rewind_failure | default(false) }}"  # or 'true' (if use_pg_rewind: 'true')
 # avoid removing the data directory on an unsuccessful rewind
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica.
 
-patroni_remove_data_directory_on_diverged_timelines: false  # or 'true'
+patroni_remove_data_directory_on_diverged_timelines: "{{ patroni.remove_data_directory_on_diverged_timelines | default(false) }}"  # or 'true'
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
 
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#bootstrap
-patroni_cluster_bootstrap_method: "initdb"  # or "wal-g", "pgbackrest", "pg_probackup"
+patroni_cluster_bootstrap_method: "{{ patroni.cluster_bootstrap_method | default('initdb') }}"  # or "wal-g", "pgbackrest", "pg_probackup"
 
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
-patroni_create_replica_methods:
+__patroni_create_replica_methods_default:
   # - pgbackrest
   # - wal_g
   # - pg_probackup
   - basebackup
+patroni_create_replica_methods: "{{ patroni.create_replica_methods | default(__patroni_create_replica_methods_default) }}"
 
 pgbackrest:
   - { option: "command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore" }
