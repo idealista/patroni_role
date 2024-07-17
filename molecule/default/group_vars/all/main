@@ -8,7 +8,7 @@ pgbouncer_install: True
 pg_major_release: "{{ (lookup('env', 'PG_MAJOR_RELEASE', default='') |  length > 0) | ternary(lookup('env', 'PG_MAJOR_RELEASE'), '16') }}"
 
 patroni:
-  cluster_name: "pgdbk-cluster"  # the cluster name (must be unique for each cluster)
+  cluster_name: "pgdbk-cluster-test"  # the cluster name (must be unique for each cluster)
   install_version: "3.3.0"  # or 'latest'
 
   superuser_username: "postgres"
@@ -18,6 +18,8 @@ patroni:
   replication_password: supersecure 
 
   pending_restart: true
+
+  consul_namespace: 'pgdb_service'
 
 postgresql:
   locale: 'es_ES.UTF-8'

@@ -3,7 +3,7 @@
 
 scope: {{ patroni_cluster_name }}
 name: {{ ansible_hostname }}
-namespace: /{{ patroni_etcd_namespace | default('service') }}
+namespace: /{{ patroni_consul_namespace | default('service') }}
 
 {% if patroni_log_destination == 'logfile' %}
 log:
@@ -48,12 +48,53 @@ etcd3:
 {% endif %}
 
 {% if dcs_type == 'consul' %}
+{% set omit_placeholder_pattern = '__omit_place_holder__' %}
 consul:
+{% if  patroni_consul_url is defined and patroni_consul_url is not none and ( patroni_consul_url is not string or omit_placeholder_pattern not in patroni_consul_url ) %}
+  url: '{{ patroni_consul_url }}'
+{% else %}
   host: {{ patroni_consul_host | default ('127.0.0.1:8500') }} 
-  {% if patroni_consul_register_service | default(false) | bool %}
-    register_service: true 
-  {% endif %}
+{% endif %}
+{% if  patroni_consul_port is defined and patroni_consul_port is not none and ( patroni_consul_port is not string or omit_placeholder_pattern not in patroni_consul_port ) %}
+  port: {{ patroni_consul_port }}
+{% endif %}
+{% if  patroni_consul_scheme is defined and patroni_consul_scheme is not none and ( patroni_consul_scheme is not string or omit_placeholder_pattern not in patroni_consul_scheme ) %}
+  scheme: {{ patroni_consul_scheme }}
+{% endif %}
+{% if  patroni_consul_token is defined and patroni_consul_token is not none and ( patroni_consul_token is not string or omit_placeholder_pattern not in patroni_consul_token ) %}
+  token: {{ patroni_consul_token }}
+{% endif %}
+{% if  patroni_consul_verify is defined and patroni_consul_verify is not none and ( patroni_consul_verify is not string or omit_placeholder_pattern not in patroni_consul_verify ) %}
+  verify: {{ patroni_consul_verify }}
+{% endif %}
+{% if  patroni_consul_cacert is defined and patroni_consul_cacert is not none and ( patroni_consul_cacert is not string or omit_placeholder_pattern not in patroni_consul_cacert ) %}
+  cacert: {{ patroni_consul_cacert }}
+{% endif %}
+{% if  patroni_consul_cert is defined and patroni_consul_cert is not none and ( patroni_consul_cert is not string or omit_placeholder_pattern not in patroni_consul_cert ) %}
+  cert: {{ patroni_consul_cert }}
+{% endif %}
+{% if  patroni_consul_key is defined and patroni_consul_key is not none and ( patroni_consul_key is not string or omit_placeholder_pattern not in patroni_consul_key ) %}
+  key: {{ patroni_consul_key }}
+{% endif %}
+{% if  patroni_consul_dc is defined and patroni_consul_dc is not none and ( patroni_consul_dc is not string or omit_placeholder_pattern not in patroni_consul_dc ) %}
+  dc: {{ patroni_consul_dc }}
+{% endif %}
+{% if  patroni_consul_consistency is defined and patroni_consul_consistency is not none and ( patroni_consul_consistency is not string or omit_placeholder_pattern not in patroni_consul_consistency ) %}
+  consistency: {{ patroni_consul_consistency }}
+{% endif %}
   checks: {{ patroni_consul_checks | default ([]) }}
+{% if  patroni_consul_register_service is defined and patroni_consul_register_service is not none and ( patroni_consul_register_service is not string or omit_placeholder_pattern not in patroni_consul_register_service ) %}
+  register_service: {{ patroni_consul_register_service }}
+{% endif %}
+{% if  patroni_consul_service_tags is defined and patroni_consul_service_tags is not none and ( patroni_consul_service_tags is not string or omit_placeholder_pattern not in patroni_consul_service_tags ) %}
+  service_tags: {{ patroni_consul_service_tags }}
+{% endif %}
+{% if  patroni_consul_service_check_interval is defined and patroni_consul_service_check_interval is not none and ( patroni_consul_service_check_interval is not string or omit_placeholder_pattern not in patroni_consul_service_check_interval ) %}
+  service_check_interval: {{ patroni_consul_service_check_interval }}
+{% endif %}
+{% if  patroni_consul_service_check_tls_server_name is defined and patroni_consul_service_check_tls_server_name is not none and ( patroni_consul_service_check_tls_server_name is not string or omit_placeholder_pattern not in patroni_consul_service_check_tls_server_name) %}
+  service_check_tls_server_name: {{ patroni_consul_service_check_tls_server_name }}
+{% endif %}
 {% endif %}
 
 bootstrap:
