@@ -67,7 +67,7 @@
             - RUSTUP_HOME: /root/.rustup
 
         - name: pgvectorscale - Install cargo-pgrx
-          shell: /root/.cargo/bin/cargo install --locked cargo-pgrx
+          shell: /root/.cargo/bin/cargo install --locked cargo-pgrx --version {{ postgresql_cargo_pgrx_install_version }}
 
         - name: pgvectorscale - pgrx development environment
           shell: /root/.cargo/bin/cargo pgrx init --pg16 pg_config

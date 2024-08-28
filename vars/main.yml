@@ -171,6 +171,7 @@ postgresql_extensions_install_default: []
 postgresql_extensions_install: "{{ postgresql_extensions_install_default | union(postgresql.extensions_install | default([])) }}"
 
 postgresql_h3_install_version: "{{ postgresql.h3_install_version | default('latest') }}"
+postgresql_cargo_pgrx_install_version: "{{ postgresql.cargo_pgrx_install_version | default('0.11.4') }}"
 
 # postgresql parameters to bootstrap dcs (are parameters for example)
 __postgresql_parameters:
