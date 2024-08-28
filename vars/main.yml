@@ -60,23 +60,40 @@ vip_manager_mask: "24"  # netmask for the virtual ip
 
 
 # DCS (Distributed Consensus Store)
-dcs_exists: true  # or 'true' if you don't want to deploy a new etcd cluster
-dcs_type: "consul"  # or 'consul'
+dcs_exists: "{{ dcs.exists | default(true) }}"   # or 'true' if you don't want to deploy a new etcd cluster
+dcs_type: "{{ dcs.type | default('consul') }}"   # 'etcd' or 'consul'
 
 # if dcs_type: "etcd" and dcs_exists: false
-etcd_version: "3.5.9"  # version for deploy etcd cluster
-etcd_data_dir: "/var/lib/etcd"
-etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
+etcd_protocol: "{{ etcd.protocol | default('http') }}"  # (optional) http or https, if not specified http is used
+etcd_version: "{{ etcd.version | default('3.5.9') }}"  # version for deploy etcd cluster
+etcd_data_dir: "{{ etcd.data_dir | default('/var/lib/etcd') }}"
+etcd_cluster_name: "{{ etcd.cluster_name | default('etcd-' + patroni_cluster_name) }}"  # ETCD_INITIAL_CLUSTER_TOKEN
+etcd_election_timeout: "{{ etcd._election_timeout | default('5000') }}"
+etcd_heartbeat_interval: "{{ etcd.heartbeat_interval | default('1000') }}"
+etcd_initial_election_tick_advance: "{{ etcd.initial_election_tick_advance | default('false') }}"
+etcd_add_config: "{{ etcd.add_config | default([]) }}"
+etcd_cacert: "{{ etcd.cacert | default('/etc/etcd/cert/ca.pem') }}"
+etcd_cert: "{{ etcd.cert | default('/etc/etcd/cert/client.pem') }}"
+etcd_key: "{{ etcd.key | default('/etc/etcd/cert/client-key.pem') }}"
 
 # if dcs_type: "etcd" and dcs_exists: true
-patroni_etcd_hosts: []  # list of servers of an existing etcd cluster
+patroni_etcd_hosts: "{{ patroni.etcd_hosts | default([]) }}"  # list of servers of an existing etcd cluster if etcd_cluster group is not defined.
 #  - { host: "10.128.64.140", port: "2379" }
 #  - { host: "10.128.64.142", port: "2379" }
 #  - { host: "10.128.64.143", port: "2379" }
-patroni_etcd_namespace: "service"     # (optional) etcd namespace (prefix)
-patroni_etcd_username: ""             # (optional) username for etcd authentication
-patroni_etcd_password: ""             # (optional) password for etcd authentication
-patroni_etcd_protocol: ""             # (optional) http or https, if not specified http is used
+patroni_etcd_namespace: "{{ patroni.etcd_namespace | default('service') }}"   # (optional) etcd namespace (prefix)
+patroni_etcd_username: "{{ patroni.etcd_username | default(omit) }}"  # (optional) username for etcd authentication
+patroni_etcd_password: "{{ patroni.etcd_password | default(omit) }}"  # (optional) password for etcd authentication
+patroni_etcd_protocol: "{{ patroni.etcd_protocol | default(omit) }}"  # (optional) http or https, if not specified http is used
+patroni_etcd_host: "{{ patroni.etcd_host | default(omit) }}"  # the host:port for the etcd endpoint. if patroni_etcd_hosts=[] or etcd_cluster group is not defined.
+patroni_etcd_use_proxies: "{{ patroni.etcd_use_proxies | default(omit) }}"  # If this parameter is set to true, Patroni will consider hosts as a list of proxies and will not perform a topology discovery of etcd cluster.
+patroni_etcd_url: "{{ patroni.etcd_url | default(omit) }}"  # url for the etcd.
+patroni_etcd_proxy: "{{ patroni.etcd_proxy | default(omit) }}"  # proxy url for the etcd. If you are connecting to the etcd using proxy, use this parameter instead of url.
+patroni_etcd_srv: "{{ patroni.etcd_srv | default(omit) }}"  # Domain to search the SRV record(s) for cluster autodiscovery. Patroni will try to query these SRV service names for specified domain (in that order until first success): _etcd-client-ssl, _etcd-client, _etcd-ssl, _etcd, _etcd-server-ssl, _etcd-server. If SRV records for _etcd-server-ssl or _etcd-server are retrieved then ETCD peer protocol is used do query ETCD for available members. Otherwise hosts from SRV records will be used.
+patroni_etcd_srv_suffix: "{{ patroni.etcd_srv_suffix | default(omit) }}"  # Configures a suffix to the SRV name that is queried during discovery. Use this flag to differentiate between multiple etcd clusters under the same domain. Works only with conjunction with srv. For example, if srv_suffix: foo and srv: example.org are set, the following DNS SRV query is made:_etcd-client-ssl-foo._tcp.example.com (and so on for every possible ETCD SRV service name).
+patroni_etcd_cacert: "{{ patroni.etcd_cacert | default(omit) }}"  # (optional) The ca certificate. If present it will enable validation.
+patroni_etcd_cert: "{{ patroni.etcd_cert | default(omit) }}"  # (optional) file with the client certificate.
+patroni_etcd_key: "{{ patroni.etcd_key | default(omit) }}"  # (optional) file with the client key. Can be empty if the key is part of cert.
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/yaml_configuration.html

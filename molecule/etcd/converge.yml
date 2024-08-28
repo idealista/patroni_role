@@ -1,0 +1,28 @@
+---
+
+- name: Install etc cluster
+  hosts: etcd_cluster
+
+  tasks:
+    - name: create etc cluster
+      include_role:
+        name: patroni_role
+        tasks_from: create_etcd_cluster.yml
+      when: not dcs.exists | bool and dcs.type=='etcd'
+      tags: etcd
+
+- name: Install pgdb cluster
+  hosts: postgres_cluster
+ 
+  pre_tasks:
+    - name: pre-checks postgres
+      import_tasks: "../../tasks/pre-checks/postgres.yml"
+      tags: always
+
+  roles:
+    - role: postgresql_role
+      when: postgresql_install | bool and not postgres_installed
+    - role: pgbouncer_role
+      when: pgbouncer_install | bool and not pgbouncer_installed
+    - role: patroni_role
+ 

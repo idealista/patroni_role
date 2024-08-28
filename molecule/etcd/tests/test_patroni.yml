@@ -1,0 +1,28 @@
+# Molecule managed
+
+---
+file:
+  /etc/patroni:
+    exists: true
+    filetype: directory
+    owner: {{ pg_user }}
+    group: {{ pg_group }}
+  /etc/patroni/patroni.yml:
+    exists: true
+    filetype: file
+    owner: {{ pg_user }}
+    group: {{ pg_group }}
+ 
+service:
+  patroni:
+    enabled: true
+    running: true
+port:
+  tcp:{{ patroni_restapi_port }}:
+    listening: true
+
+http:
+  http://{{ inventory_hostname }}:8008/patroni:
+    status: 200
+    body:
+      - "running"

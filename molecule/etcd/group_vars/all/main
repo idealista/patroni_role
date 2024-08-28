@@ -7,6 +7,19 @@ pgbouncer_install: True
 
 pg_major_release: "{{ (lookup('env', 'PG_MAJOR_RELEASE', default='') |  length > 0) | ternary(lookup('env', 'PG_MAJOR_RELEASE'), '16') }}"
 
+dcs:
+  exists: false
+  type: 'etcd'
+
+etcd:
+  version: '3.5.9'
+  data_dir: '/var/lib/etcd'
+  cluster_name: "etcd-pgdbk-cluster-test" 
+  election_timeout: '5000'
+  heartbeat_interval: '1000'
+  initial_election_tick_advance: 'false'
+  add_config: []
+
 patroni:
   cluster_name: "pgdbk-cluster-test"  # the cluster name (must be unique for each cluster)
   install_version: "3.3.0"  # or 'latest'
@@ -19,7 +32,8 @@ patroni:
 
   pending_restart: true
 
-  consul_namespace: 'pgdb_service'
+  etcd_namespace: 'pgdb_service'
+
 
 postgresql:
   locale: 'es_ES.UTF-8'
