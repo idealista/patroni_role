@@ -9,8 +9,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a ch
 ### Removed
 ### Fixed
 
-## [1.0.4](https://github.com/idealista/patroni_role/tree/1.0.4) (2024-08-24)
-### [Full Changelog](https://github.com/idealista/patroni_role/compare/1.0.3...1.0.4)
+## [1.1.0](https://github.com/idealista/patroni_role/tree/1.1.0) (2024-08-24)
+### [Full Changelog](https://github.com/idealista/patroni_role/compare/1.0.3...1.1.0)
 ### Added
 - *[#14](https://github.com/idealista/patroni_role/issues/14) Add etcd configuration in patroni_role* @ledepedro
 
