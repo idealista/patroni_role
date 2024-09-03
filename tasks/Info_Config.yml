@@ -75,5 +75,15 @@
       "is_add_node_cluster: {{ is_add_node_cluster | default(false) }}"
       "new_node: {{ new_node | default(false) }}"
 
+      "dcs_exists: {{ dcs_exists | default('++++ ERROR +++++') }}"
+      "dcs_type: {{ dcs_type | default('++++ ERROR +++++') }}"
+
+      "etcd_version: {{ etcd_version | default('++++ ERROR +++++') }}"
+      "etcd_data_dir: {{ etcd_data_dir | default('++++ ERROR +++++') }}"
+      "etcd_cluster_name: {{ etcd_cluster_name | default('++++ ERROR +++++') }}"
+      "etcd_election_timeout: {{ etcd_election_timeout | default('++++ ERROR +++++') }}"
+      "etcd_heartbeat_interval: {{ etcd_heartbeat_interval | default('++++ ERROR +++++') }}"
+      "etcd_initial_election_tick_advance: {{ etcd_initial_election_tick_advance | default('++++ ERROR +++++') }}"
+      "etcd_add_config: {{ etcd_add_config | default('++++ ERROR +++++') }}"
 
 ...
