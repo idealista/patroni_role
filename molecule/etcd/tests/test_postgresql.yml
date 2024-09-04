@@ -1,0 +1,61 @@
+# Molecule managed
+
+---
+file:
+  {{ postgresql_data_dir }}:
+    exists: true
+    filetype: directory
+    owner: {{ pg_user }}
+    group: {{ pg_group }}
+  {{ postgresql_conf_dir }}:
+    exists: true
+    filetype: directory
+    owner: {{ pg_user }}
+    group: {{ pg_group }}
+  {{ postgresql_log_dir }}:
+    exists: true
+    filetype: directory
+    owner: {{ pg_user }}
+    group: {{ pg_group }}
+
+service:
+  {{ postgresql_service }}:
+    enabled: true
+    running: true
+port:
+  tcp:{{ postgresql_port }}:
+    listening: true
+
+command:
+  pgversion:
+    exit-status: 0
+    exec: "{{ postgresql_bin_dir }}/postgres -V"
+    stdout:
+      - "postgres (PostgreSQL) {{ pg_major_release }}"
+    stderr: []
+    timeout: 30000
+    skip: false
+  pgisready:
+    exit-status: 0
+    exec: "{{ postgresql_bin_dir }}/pg_isready"
+    stdout:
+      - "accepting connections"
+    stderr: []
+    timeout: 30000
+    skip: false
+  users:
+    exit-status: 0
+    exec: runuser -l postgres -c '{{ postgresql_bin_dir }}/psql -c "\du"'
+    stdout:
+      - "{{ pg_users[0].name }}"
+    stderr: []
+    timeout: 30000
+    skip: false
+  databases:
+    exit-status: 0
+    exec: runuser -l postgres -c '{{ postgresql_bin_dir }}/psql -c "\l"'
+    stdout:
+      - "{{ pg_databases[0].name }}"
+    stderr: []
+    timeout: 30000
+    skip: false

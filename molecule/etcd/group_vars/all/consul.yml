@@ -1,0 +1,6 @@
+---
+
+consul_server_nodes:
+  - consul-server-test
+
+consul_datacenter: mainlocal

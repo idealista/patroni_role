@@ -29,22 +29,52 @@ restapi:
 #    username: username
 #    password: password
 
-{% if not dcs_exists|bool and dcs_type == 'etcd' %}
+{% if dcs_type == 'etcd' %}
 etcd3:
-  hosts: {% for host in groups['etcd_cluster'] %}{{ ansible_host }}:2379{% if not loop.last %},{% endif %}{% endfor %}
-{% endif %}
-{% if dcs_exists|bool and dcs_type == 'etcd' %}
-etcd3:
-  hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor +%}
-  {% if patroni_etcd_username | default('') | length > 0 %}
-  username: {{ patroni_etcd_username | default('') }}
+  {% set omit_placeholder_pattern = '__omit_place_holder__' %}
+  {% if patroni_etcd_hosts | length > 0 %}
+  hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
+  {% else %}
+  hosts: {% for etc_host in groups['etcd_cluster'] %}{{ hostvars[etc_host].host_ip | default (hostvars[etc_host]['ansible_default_ipv4']['address']) }}:2379{% if not loop.last %},{% endif %}{% endfor %}
   {% endif %}
-  {% if patroni_etcd_password | default('') | length > 0 %}
+  
+  {% if  patroni_etcd_username is defined and patroni_etcd_username is not none and ( patroni_etcd_username is not string or omit_placeholder_pattern not in patroni_etcd_username ) %}
+  username: {{ patroni_etcd_username }}
+  {% endif %}
+  {% if  patroni_etcd_password is defined and patroni_etcd_password is not none and ( patroni_etcd_password is not string or omit_placeholder_pattern not in patroni_etcd_password ) %}
   password: {{ patroni_etcd_password }}
   {% endif %}
-  {% if patroni_etcd_protocol | default('') | length > 0 %}
+  {% if  patroni_etcd_protocol is defined and patroni_etcd_protocol is not none and ( patroni_etcd_protocol is not string or omit_placeholder_pattern not in patroni_etcd_protocol ) %}
   protocol: {{ patroni_etcd_protocol }}
   {% endif %}
+  {% if  patroni_etcd_host is defined and patroni_etcd_host is not none and ( patroni_etcd_host is not string or omit_placeholder_pattern not in patroni_etcd_host ) %}
+  host: {{ patroni_etcd_host }}
+  {% endif %}
+  {% if  patroni_etcd_use_proxies is defined and patroni_etcd_use_proxies is not none and ( patroni_etcd_use_proxies is not string or omit_placeholder_pattern not in patroni_etcd_use_proxies ) %}
+  use_proxies: {{ patroni_etcd_use_proxies }}
+  {% endif %}
+  {% if  patroni_etcd_url is defined and patroni_etcd_url is not none and ( patroni_etcd_url is not string or omit_placeholder_pattern not in patroni_etcd_url ) %}
+  url: {{ patroni_etcd_url }}
+  {% endif %}
+  {% if  patroni_etcd_proxy is defined and patroni_etcd_proxy is not none and ( patroni_etcd_proxy is not string or omit_placeholder_pattern not in patroni_etcd_proxy ) %}
+  proxy: {{ patroni_etcd_proxy }}
+  {% endif %}
+  {% if  patroni_etcd_srv is defined and patroni_etcd_srv is not none and ( patroni_etcd_srv is not string or omit_placeholder_pattern not in patroni_etcd_srv ) %}
+  srv: {{ patroni_etcd_srv }}
+  {% endif %}
+  {% if  patroni_etcd_srv_suffix is defined and patroni_etcd_srv_suffix is not none and ( patroni_etcd_srv_suffix is not string or omit_placeholder_pattern not in patroni_etcd_srv_suffix ) %}
+  srv_suffix: {{ patroni_etcd_srv_suffix }}
+  {% endif %}
+  {% if  patroni_etcd_cacert is defined and patroni_etcd_cacert is not none and ( patroni_etcd_cacert is not string or omit_placeholder_pattern not in patroni_etcd_cacert ) %}
+  cacert: {{ patroni_etcd_cacert }}
+  {% endif %}
+  {% if  patroni_etcd_cert is defined and patroni_etcd_cert is not none and ( patroni_etcd_cert is not string or omit_placeholder_pattern not in patroni_etcd_cert ) %}
+  cert: {{ patroni_etcd_cert }}
+  {% endif %}
+  {% if  patroni_etcd_key is defined and patroni_etcd_key is not none and ( patroni_etcd_key is not string or omit_placeholder_pattern not in patroni_etcd_key ) %}
+  key: {{ patroni_etcd_key }}
+  {% endif %}
+
 {% endif %}
 
 {% if dcs_type == 'consul' %}

@@ -10,6 +10,20 @@ proxy_env: {}  # yamllint disable rule:braces
 # "postgres_cluster" variables
 is_master: true
 
+dcs:
+#  exists: true
+#  type: 'consul'
+
+etcd:
+#  version: '3.5.9'
+#  data_dir: '/var/lib/etcd'
+#  cluster_name: "etcd-pgdbk-cluster-test"
+#  election_timeout: '5000'
+#  heartbeat_interval: '1000'
+#  initial_election_tick_advance: 'false'
+#  protocol: 'http'
+#  add_config: []
+
 patroni:
 #  is_cluster_installed: false
 #  is_add_node_cluster: false
@@ -20,6 +34,26 @@ patroni:
 #  replication_username: "replicator"
 #  replication_password: "replicator-pass"
 #  pending_restart: false
+
+#  etcd_hosts: []
+#  - { host: "10.128.64.140", port: "2379" }
+#  - { host: "10.128.64.142", port: "2379" }
+#  - { host: "10.128.64.143", port: "2379" }
+#  etcd_namespace: "{{ omit }}"
+#  etcd_username: "{{ omit }}"
+#  etcd_password: "{{ omit }}"
+#  etcd_protocol: "{{ omit }}"
+#  etcd_host: "{{ omit }}"
+#  etcd_use_proxies: "{{ omit }}"
+#  etcd_url: "{{ omit }}"
+#  etcd_proxy: "{{ omit }}"
+#  etcd_srv: "{{ omit }}"
+#  etcd_srv_suffix: "{{ omit }}"
+#  etcd_cacert: "{{ omit }}"
+#  etcd_cert: "{{ omit }}"
+#  etcd_key: "{{ omit }}"
+
+
 #  consul_namespace: 'service'
 #  consul_register_service: "{{ omit }}"
 #  consul_host: '127.0.0.1:8500'
